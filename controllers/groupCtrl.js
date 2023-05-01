@@ -12,6 +12,15 @@ const userModel= require('../models/userModel')
             res.status(500).send('Server Error');
           }   
      },
+     getPosts: async (req, res)=> {
+      try {
+          const posts = await Post.find({group: req.params.groupId});
+          res.json(posts);
+        } catch (err) {
+          console.error(err.message);
+          res.status(500).send('Server Error');
+        }   
+   },
      joinaGroup: async (req,res) => {
       try {
         const group = await Group.findById(req.params.groupId);
@@ -55,7 +64,7 @@ const userModel= require('../models/userModel')
           .populate('book') // Thêm thông tin sách liên quan đến bài viết
           .populate('user') // Thêm thông tin người dùng đăng bài viết
           .exec();
-    console.log(posts)
+  
         res.json({ group, posts });
       } catch (error) {
         console.error(error);
@@ -65,7 +74,6 @@ const userModel= require('../models/userModel')
     },
  createGroup: async (req,res) => {
     try {
-      console.log(req.body)
         // Kiểm tra các trường thông tin tạo group
         if (!req.body.name) {
           return res.status(400).json({ message: 'Group name is required.' });

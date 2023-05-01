@@ -1,6 +1,6 @@
 const Posts = require('../models/postModel')
 const Comments = require('../models/commentModel')
-const User = require('../models/userModel')
+const Users = require('../models/userModel')
 const Book = require('../models/bookModel')
 const axios = require("axios")
 class APIfeatures {
@@ -17,16 +17,53 @@ class APIfeatures {
         return this;
     }
 }
-
 const postCtrl = {
+    
     createPost: async (req, res) => {
         try {       
-  try {
+            const { isFirstLogin } = req.body;
+            if (isFirstLogin) {
+              
+                const books = req.body.recommendedBooks;
+           
+                const ReadChoiceaccount = await Users.findOne({ username: "ReadChoice" });
+                const postPromises = books.map(async (book) => {
+                    let book1 = await Book.findOne({ googleBooksId: book.id });
+                    if (!book1) {
+                        book1 = new Book({
+                            googleBooksId: book.bookId,
+                            title: book.title,
+                            author: book.authors ? book.authors.join(', ') : 'N/A',
+                            publicationDate: book.publishedDate,
+                            isbn: book.industryIdentifiers ? book.industryIdentifiers[0].identifier : 'N/A',
+                            description: book.description ? book.description : "",
+                            genre: book.categories ? book.categories.join(', ') : 'N/A',
+                            coverImage: book?.cover_i ,
+                            downloadLink: book?.downloadLink,
+                            buyLink: book?.buyLink,
+                            averageRating: book.averageRating,
+                            ratingsCount: book.ratingsCount
+                        });
+                    };
+                    await book1.save();
+                    const post = new Posts({
+                        status: "recommends a book",
+                        book: book1._id,
+                        system: req.user._id,
+                        user: ReadChoiceaccount._id,
+                        group: req.body?.groupId
+                    });
+                    await post.save();
+                    const createdPost = await Posts.findById(post._id).populate('book').populate('user');
+                    return createdPost;
+                });
+                const createdPosts = await Promise.all(postPromises);
+                return  res.status(200).json(createdPosts);
+        }
     // Kiểm tra các trường bắt buộc
     if (!req.body.content || !req.body.book || !req.user) {
       return res.status(400).json({ msg: 'Các trường status, book, và user là bắt buộc' });
     }
-    console.log(req.body.book)
  let book = await Book.findOne({ googleBooksId: req.body.book.id });
  if (!book) {
   book = new Book({
@@ -44,29 +81,21 @@ const postCtrl = {
     ratingsCount:req.body.book.volumeInfo.ratingsCount  
  })};
  await book.save()  
-
     const post = new Posts({
       status: req.body.content,
       book: book._id,
       user: req.user._id,
       group: req.body?.groupId 
     });
-    
     // Kiểm tra xem user đã tồn tại hay chưa
-    const existingUser = await User.findById(req.user._id);
+    const existingUser = await Users.findById(req.user._id);
     if (!existingUser) {
       return res.status(400).json({ msg: 'User không tồn tại' });
     }
-
     // Kiểm tra xem book đã tồn tại hay chưa
-
     await post.save();
     const newpost = await Posts.findOne({ _id: post._id }).populate('book').populate('user');
     res.json(newpost);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
         } catch (err) {
             return res.status(500).json({msg: err.message})
         }
@@ -81,7 +110,7 @@ const postCtrl = {
               ).paginating()
 
             const posts = await features.query.sort('-createdAt')
-            .populate("book", "title coverImage author")
+            .populate("book")
             .populate("user likes", "avatar username fullname followers")
             .populate({
                 path: "comments",
@@ -90,7 +119,7 @@ const postCtrl = {
                     select: "-password"
                 }
             })
-            console.log (posts)
+          
             res.json({
                 msg: 'Success!',
                 result: posts.length,
@@ -101,7 +130,8 @@ const postCtrl = {
             return res.status(500).json({msg: err.message})
         }
     },
-    
+
+
     updatePost: async (req, res) => {
         try {
             const { content, images } = req.body
@@ -164,7 +194,7 @@ const postCtrl = {
         try {
             const features = new APIfeatures(Posts.find({user: req.params.id}), req.query)
             .paginating()
-            const posts = await features.query.sort("-createdAt")
+            const posts = await features.query.sort("-createdAt").populate("book").populate('user')
 
             res.json({
                 posts,

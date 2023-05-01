@@ -64,7 +64,7 @@ const ratingCtrl = {
     },
     
     getRatings: async (req,res) => {
-        console.log(req.params.user_id)
+      
         try {
             const rating = await Rating.find({ author: req.params.user_id });
             if (!rating) {

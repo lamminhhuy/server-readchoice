@@ -36,11 +36,7 @@ const reviewCtrl = {
 
   getReviews: async (req, res) => {
     const { bookId } = req.params;
-    const isValidObjectId = mongoose.Types.ObjectId.isValid(bookId);
-if (!isValidObjectId)
-{
-  return res.status(404).json({ message: 'No reviews found for this book.' });
-}
+
     try {
       const reviews = await Review.find({ book: bookId }).populate('author').populate('comments');
       if (reviews.length === 0) {

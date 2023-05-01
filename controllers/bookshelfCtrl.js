@@ -11,6 +11,7 @@ const BookshelfCtrl = {
   try {
     // Extract request body
     const { drawerName, userId, book } = req.body;
+   
     const missingFields = [];
     if (!drawerName) {
       missingFields.push('drawerName');
@@ -21,7 +22,7 @@ const BookshelfCtrl = {
     if (missingFields.length > 0) {
       return res.status(400).json({ message: `Missing required fields: ${missingFields.join(', ')}` });
     }
-    console.log(book)
+  
     let findBook = await Book.findOne({title:book.title})
     if(!findBook)
     {
@@ -52,7 +53,7 @@ const BookshelfCtrl = {
 
       const post = new Post({
         status: drawerName && drawerName == "Read" ? "finished reading" :drawerName,
-        book: findBook.bookId,
+        book: findBook._id,
         user: userId
       });
   await post.save();
@@ -72,23 +73,22 @@ const BookshelfCtrl = {
         });
         await post.save();
       }  else  {
-        res.status(400).json({ message: 'Book already added to the bookshelf' });
+        return   res.status(400).json({ message: 'Book already added to the bookshelf' });
       }
- 
       } else {
-        bookshelf.drawers.push({name: drawerName, books: [bookId]});
-    
+        
+        bookshelf.drawers.push({name: drawerName, books: [findBook._id]});
+  
         const post = new Post({
           status: drawerName && drawerName == "Read" ? "finished reading" :drawerName,
-          book: findBook.bookId,
+          book: findBook._id,
           user: userId
         });
     await post.save();
-  
       }
     }
     await bookshelf.save();
-    res.status(200).json({ message: 'Book added to the bookshelf' });
+    return res.status(200).json({ message: 'Book added to the bookshelf' });
     // Return success message
   } catch (error) {
     console.error(error);
@@ -98,23 +98,21 @@ const BookshelfCtrl = {
   getbookshelf: async (req, res) => { 
   try {
     // Get user ID from request parameter
-  
     const userId =req.params.userId;
-  
     // Verify that user exists
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
     // Find bookshelf for the user
-    const bookshelf = await Bookshelf.findOne({ user: userId }).populate('drawers.books');
-   
+    const bookshelf = await Bookshelf.findOne({user:userId}).populate('drawers.books');
+
+    
     if(!bookshelf)
     {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(200).json([]);
     }
-    res.json(bookshelf.drawers);
+    res.json(bookshelf. drawers);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

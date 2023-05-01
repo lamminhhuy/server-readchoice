@@ -1,7 +1,9 @@
 const router = require('express').Router()
 const bookCtrl =  require('../controllers/bookCtrl')
 const reviewCtrl = require('../controllers/reviewCtrl')
-router.post('/books',bookCtrl.postBook)
+ const SearchHistory = require('../models/searchhistoryModel')
+ const RecommendedBook  = require('../models/recommendedBooks')
+router.post('/books/',bookCtrl.postBook)
 router.post('/',bookCtrl.getbooks)
 router.post('/:id',bookCtrl.getabook)
 router.get('/books/search/:keyword',bookCtrl.findabook)
@@ -21,7 +23,7 @@ router.get('/books/:category', async (req, res) => {
       const books = response.data.items.map(item => ({
         id: item.id,
         title: item.volumeInfo.title,
-        authors: item.volumeInfo.authors,
+        authors: item.volumeInfo.authors, 
         description: item.volumeInfo.description,
         image: item.volumeInfo.imageLinks?.thumbnail
       }));
@@ -32,4 +34,29 @@ router.get('/books/:category', async (req, res) => {
     }
   });
   
-module.exports = router
+  router.post('/books/search-history', async (req, res) => {
+    const { userId, searchTerm } = req.body;
+    try {
+      const existingSearchHistory = await SearchHistory.findOneAndUpdate(
+        { userId },
+        { query:searchTerm },
+        { upsert: true }
+      );
+      res.json('Search history saved successfully!');
+    } catch (error) {
+      res.status(400).json('Error: ' + error);
+    }
+  });
+  
+  router.get(`/books/search-history/:userId`, async (req, res) => {
+    const { userId } = req.params;
+    try {
+      const existingSearchHistory = await SearchHistory.findOne({userId: userId}
+      );
+      res.status(200).json(existingSearchHistory);
+    } catch (error) {
+      res.status(400).json('Error: ' + error);
+    }
+  });
+
+  module.exports = router;

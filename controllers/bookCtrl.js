@@ -7,7 +7,6 @@ const bookCtrl = {
      try {
        const { title, author, isbn, publicationDate, genre, description, coverImage, rating, review, status, series, seriesNumber } = req.body;
 
-       console.log(coverImage)
        const existingBook = await Book.findOne({ isbn });
        if (existingBook) {
          return res.status(400).json({msg:'This book already exists in the database!'});
@@ -47,8 +46,9 @@ const bookCtrl = {
  let book = await Book.findOne({ googleBooksId: req.params.id });
  if (!book) {
 const response= await axios.get(`https://www.googleapis.com/books/v1/volumes/${req.params.id}?key=AIzaSyC1QE3wf2PHJeyxKkri7C3d68OC5379ksg`);
-console.log(response)
+
 const bookdata = response.data
+
   book = new Book({
     googleBooksId: bookdata.id,
     title: bookdata.volumeInfo.title,
@@ -63,10 +63,9 @@ const bookdata = response.data
     averageRating:bookdata.volumeInfo.averageRating,
     ratingsCount:bookdata.volumeInfo.ratingsCount  
  });
- console.log(book)
- const savedBook = await book.save();
- console.log(savedBook)
- return res.json(savedBook);
+await book.save();
+
+ return res.json(book);
  }
  return res.json(book);
  } catch (err) {

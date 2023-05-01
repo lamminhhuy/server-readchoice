@@ -47,6 +47,11 @@ const userSchema = new mongoose.Schema({
         required: true,
         default: false,
       },
+      isFirstLogin: 
+      {
+        type: Boolean,
+        default: true,
+      },
       isDisable: {
       type: Boolean,
       required: true,

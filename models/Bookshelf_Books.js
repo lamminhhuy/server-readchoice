@@ -5,13 +5,13 @@ const bookshelfSchema = new mongoose.Schema({
     name: String,
     books: [{
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Book'
+      ref: 'book'
     }],
   
   }],
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'user',
     required: true
   },
   created_date: {

@@ -41,7 +41,7 @@ const SocketServer = (socket) => {
 
     // Likes
     socket.on('likePost', newPost => {
-     
+        console.log("liked")
         const ids = [...newPost.user.followers, newPost.user._id]
         const clients = users.filter(user => ids.includes(user.id))
 
@@ -121,23 +121,23 @@ const SocketServer = (socket) => {
 
 
     // Check User Online / Offline
-    socket.on('checkUserOnline', data => {
-        const following = users.filter(user => 
-            data.following.find(item => item._id === user.id)
-        )
-        socket.emit('checkUserOnlineToMe', following)
+    // socket.on('checkUserOnline', data => {
+    //     const following = users.filter(user => 
+    //         data.following.find(item => item._id === user.id)
+    //     )
+    //     socket.emit('checkUserOnlineToMe', following)
 
-        const clients = users.filter(user => 
-            data.followers.find(item => item._id === user.id)
-        )
+    //     const clients = users.filter(user => 
+    //         data.followers.find(item => item._id === user.id)
+    //     )
 
-        if(clients.length > 0){
-            clients.forEach(client => {
-                socket.to(`${client.socketId}`).emit('checkUserOnlineToClient', data._id)
-            })
-        }
+    //     if(clients.length > 0){
+    //         clients.forEach(client => {
+    //             socket.to(`${client.socketId}`).emit('checkUserOnlineToClient', data._id)
+    //         })
+    //     }
         
-    })
+    // })
 
 
     // Call User
