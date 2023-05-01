@@ -1,7 +1,20 @@
 {
+    "version": 2,
     "builds": [
-      { "src": "*.html", "use": "@vercel/static" },
-      { "src": "*.py", "use": "@vercel/python" },
       { "src": "*.js", "use": "@vercel/node" }
+    ],
+    "routes": [
+      {
+        "src": "/redirect",
+        "status": 308,
+        "headers": { "Location": "https://example.com/" }
+      },
+      {
+        "src": "/custom-page",
+        "headers": { "cache-control": "s-maxage=1000" },
+        "dest": "/index.html"
+      },
+      { "src": "/(.*)", 
+     "dest": "/" }
     ]
   }
